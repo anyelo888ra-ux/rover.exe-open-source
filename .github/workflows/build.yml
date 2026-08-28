@@ -30,11 +30,23 @@ jobs:
       run: |
         pyinstaller --onefile --windowed --icon=NONE --name rover rover.py
 
-    - name: Upload artifact
+    - name: Create ZIP file
+      run: |
+        cd dist
+        Compress-Archive -Path rover.exe -DestinationPath rover-exe.zip
+        cd ..
+
+    - name: Upload artifact (EXE)
       uses: actions/upload-artifact@v4
       with:
         name: rover-exe
         path: dist/rover.exe
+
+    - name: Upload artifact (ZIP)
+      uses: actions/upload-artifact@v4
+      with:
+        name: rover-exe-zip
+        path: dist/rover-exe.zip
 
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
@@ -47,7 +59,7 @@ jobs:
         draft: false
         prerelease: false
 
-    - name: Upload Release Asset
+    - name: Upload Release Asset (EXE)
       if: startsWith(github.ref, 'refs/tags/')
       uses: actions/upload-release-asset@v1
       env:
@@ -57,3 +69,14 @@ jobs:
         asset_path: ./dist/rover.exe
         asset_name: rover.exe
         asset_content_type: application/octet-stream
+
+    - name: Upload Release Asset (ZIP)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/rover-exe.zip
+        asset_name: rover-exe.zip
+        asset_content_type: application/zip
